@@ -6,13 +6,25 @@ const assert = require('assert');
 
 let store = new Store({ a: 1, b: 2 });
 
-let result, sub;
+let result, sub, sub2;
 
 // Observable
 sub = store.observable.subscribe(x => result = x);
 
 // Sends data on subscription
 assert.deepEqual(result, { a: 1, b: 2 });
+
+// Subscribe method
+result = undefined;
+sub2 = store.subscribe(x => result = x);
+assert.deepEqual(result, { a: 1, b: 2 });
+sub2.unsubscribe();
+
+// Symbol.observable
+result = undefined;
+sub2 = Observable.from(store).subscribe(x => result = x);
+assert.deepEqual(result, { a: 1, b: 2 });
+sub2.unsubscribe();
 
 // Read
 assert.deepEqual(store.read(), { a: 1, b: 2 });

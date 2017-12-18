@@ -1,6 +1,5 @@
 'use strict';
 
-var symbolObservable = require('symbol-observable');
 var Observable = require('zen-observable');
 var PushStream = require('zen-push');
 
@@ -63,6 +62,6 @@ Store.prototype.subscribe = function(fn) {
   return this.observable.subscribe(fn);
 };
 
-Store.prototype[symbolObservable] = function() {
+Store.prototype[Observable.observableSymbol] = function() {
   return this.observable;
 };
