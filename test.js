@@ -4,27 +4,84 @@ const Store = require('./');
 const Observable = require('zen-observable');
 const assert = require('assert');
 
+class MockObserver {
+  next(x) { this.nextValue = x; }
+  error(e) { this.errorValue = e; }
+  complete(x) { this.completeCalled = true; }
+}
+
 let store = new Store({ a: 1, b: 2 });
 
-let result, sub, sub2;
+{ // Subscribe method
+  let result = undefined;
+  let sub = store.subscribe(x => result = x);
+  assert.deepEqual(result, { a: 1, b: 2 });
+  sub.unsubscribe();
+}
+
+{ // Symbol.observable
+  let result = undefined;
+  let sub = Observable.from(store).subscribe(x => result = x);
+  assert.deepEqual(result, { a: 1, b: 2 });
+  sub.unsubscribe();
+}
+
+{ // Multiple subscriptions
+  let store = new Store({ a: 1, b: 2 });
+  let results = [];
+  let sub1 = store.subscribe(x => results.push(x));
+  let sub2 = store.subscribe(x => results.push(x));
+  assert.deepEqual(results, [
+    { a: 1, b: 2 },
+    { a: 1, b: 2 }
+  ]);
+  results = [];
+  store.update({ a: 2 });
+  assert.deepEqual(results, [
+    { a: 2, b: 2 },
+    { a: 2, b: 2 }
+  ]);
+  sub1.unsubscribe();
+  sub2.unsubscribe();
+}
+
+{ // observedCallback
+  let store = new Store({ a: 1 });
+  let calls = 0;
+  store.observedCallback = function() { calls++; };
+  let sub1 = store.subscribe(() => {});
+  assert.equal(calls, 1);
+  let sub2 = store.subscribe(() => {});
+  assert.equal(calls, 1);
+  sub1.unsubscribe();
+  sub2.unsubscribe();
+  sub2 = store.subscribe(() => {});
+  assert.equal(calls, 2);
+  sub2.unsubscribe();
+}
+
+{ // unobservedCallback
+  let store = new Store({ a: 1 });
+  let calls = 0;
+  store.unobservedCallback = function() { calls++; };
+  let sub1 = store.subscribe(() => {});
+  sub1.unsubscribe();
+  assert.equal(calls, 1);
+  sub1 = store.subscribe(() => {});
+  let sub2 = store.subscribe(() => {});
+  sub1.unsubscribe();
+  assert.equal(calls, 1);
+  sub2.unsubscribe();
+  assert.equal(calls, 2);
+}
+
+let result, sub;
 
 // Observable
 sub = store.observable.subscribe(x => result = x);
 
 // Sends data on subscription
 assert.deepEqual(result, { a: 1, b: 2 });
-
-// Subscribe method
-result = undefined;
-sub2 = store.subscribe(x => result = x);
-assert.deepEqual(result, { a: 1, b: 2 });
-sub2.unsubscribe();
-
-// Symbol.observable
-result = undefined;
-sub2 = Observable.from(store).subscribe(x => result = x);
-assert.deepEqual(result, { a: 1, b: 2 });
-sub2.unsubscribe();
 
 // Read
 assert.deepEqual(store.read(), { a: 1, b: 2 });

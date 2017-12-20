@@ -1,29 +1,83 @@
 'use strict';
 
 var Observable = require('zen-observable');
-var PushStream = require('zen-push');
 
-module.exports = Store;
+function sendNext(self) {
+  var value = self._state;
+  if (self._observer) {
+    sendNextTo(value, self._observer);
+  } else if (self._observers) {
+    var list = [];
+    self._observers.forEach(function(to) { list.push(to); });
+    list.forEach(function(to) { sendNextTo(value, to); });
+  }
+}
+
+function sendNextTo(value, observer) {
+  if (!observer.closed) {
+    observer.next(value);
+  }
+}
+
+function unobserved(self) {
+  return !self._observer && !self._observers;
+}
+
+function addObserver(self, observer) {
+  if (self._observers) {
+    self._observers.add(observer);
+  } else if (!self._observer) {
+    self._observer = observer;
+  } else {
+    self._observers = new Set();
+    self._observers.add(self._observer);
+    self._observers.add(observer);
+    self._observer = null;
+  }
+}
+
+function deleteObserver(self, observer) {
+  if (self._observers) {
+    self._observers.delete(observer);
+    if (self._observers.size === 0) {
+      self._observers = null;
+    }
+  } else if (self._observer === observer) {
+    self._observer = null;
+  }
+}
 
 function Store(data) {
-  var state = Object.create(null);
-  var stream = new PushStream(this);
+  if (!(this instanceof Store)) {
+    throw new TypeError('Cannot call constructor as a function');
+  }
 
-  this.observable = new Observable(function(sink) {
-    var subscription = stream.observable.subscribe(sink);
-    sink.next(state);
-    return subscription;
-  });
+  this._state = Object.create(null);
+  this._observer = null;
+  this._observers = null;
 
   if (data) {
     for (var key in data) {
-      state[key] = data[key];
+      this._state[key] = data[key];
     }
   }
 
-  this._state = state;
-  this._stream = stream;
+  var self = this;
+
+  this.observable = new Observable(function(observer) {
+    unobserved(self) && self.observedCallback();
+    addObserver(self, observer);
+    observer.next(self._state);
+    return function() {
+      deleteObserver(self, observer);
+      unobserved(self) && self.unobservedCallback();
+    };
+  });
 }
+
+Store.prototype.observedCallback = function() {};
+
+Store.prototype.unobservedCallback = function() {};
 
 Store.prototype.read = function(fn) {
   return fn ? fn(this._state) : this._state;
@@ -54,7 +108,7 @@ Store.prototype.update = function(data) {
   }
 
   if (updated) {
-    this._stream.next(this._state);
+    sendNext(this);
   }
 };
 
@@ -65,3 +119,5 @@ Store.prototype.subscribe = function(fn) {
 Store.prototype[Observable.observableSymbol] = function() {
   return this.observable;
 };
+
+module.exports = Store;

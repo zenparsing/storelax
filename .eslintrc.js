@@ -6,6 +6,10 @@ module.exports = {
     "node": true
   },
 
+  "globals": {
+    "Set": true
+  },
+
   "rules": {
     "no-console": ["error", { "allow": ["warn", "error"] }],
     "camelcase": ["error", { "properties": "always" }],
