@@ -13,7 +13,8 @@ function sendNext(self) {
 
 function sendTo(observer, value) {
   if (observer._nexting) {
-    setTimeout(function() { throw new Error('Subscriber is already running'); });
+    var err = new Error('Subscriber is already running');
+    setTimeout(function() { throw err; });
     return;
   }
   observer._nexting = true;
