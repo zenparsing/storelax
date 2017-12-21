@@ -119,7 +119,7 @@ Store.prototype.subscribe = function(fn) {
   return this.observable.subscribe(fn);
 };
 
-Store.prototype[Observable.observableSymbol] = function() {
+Store.prototype[Observable.extensions.observableSymbol] = function() {
   return this.observable;
 };
 

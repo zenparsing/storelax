@@ -1,6 +1,6 @@
 {
   "name": "storelax",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "An easy observable object store",
   "license": "MIT",
   "repository": {
@@ -16,7 +16,7 @@
     "test": "eslint index.js && node ./test.js"
   },
   "dependencies": {
-    "zen-observable": "^0.7.0"
+    "zen-observable": "^0.7.1"
   },
   "devDependencies": {
     "eslint": "^4.13.1"
