@@ -5,18 +5,20 @@ var Observable = require('zen-observable');
 function sendNext(self) {
   var value = self._state;
   if (self._observer) {
-    sendNextTo(value, self._observer);
+    sendTo(self._observer, value);
   } else if (self._observers) {
-    var list = [];
-    self._observers.forEach(function(to) { list.push(to); });
-    list.forEach(function(to) { sendNextTo(value, to); });
+    self._observers.forEach(function(to) { sendTo(to, value); });
   }
 }
 
-function sendNextTo(value, observer) {
-  if (!observer.closed) {
-    observer.next(value);
+function sendTo(observer, value) {
+  if (observer._nexting) {
+    setTimeout(function() { throw new Error('Subscriber is already running'); });
+    return;
   }
+  observer._nexting = true;
+  observer.next(value);
+  observer._nexting = false;
 }
 
 function unobserved(self) {
@@ -67,7 +69,7 @@ function Store(data) {
   this.observable = new Observable(function(observer) {
     unobserved(self) && self.observedCallback();
     addObserver(self, observer);
-    observer.next(self._state);
+    sendTo(observer, self._state);
     return function() {
       deleteObserver(self, observer);
       unobserved(self) && self.unobservedCallback();
