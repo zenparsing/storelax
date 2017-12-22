@@ -45,6 +45,16 @@ let store = new Store({ a: 1, b: 2 });
   sub2.unsubscribe();
 }
 
+{ // Recursive next not allowed
+  let store = new Store();
+  let error;
+  store.observable.subscribe(
+    () => store.update({ a: 1 }),
+    err => error = err
+  );
+  assert.ok(error);
+}
+
 { // observedCallback
   let store = new Store({ a: 1 });
   let calls = 0;
