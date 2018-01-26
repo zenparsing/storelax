@@ -50,7 +50,7 @@ store.observable
 
 ### store.read([mapFn])
 
-Returns the current store data. If a function `mapFn` is provided, it is called with the current store data and its return value is returned from this method.
+Returns the current store data. If `mapFn` is provided, it is called with the current store data and its return value is returned from this method.
 
 ```js
 const store = new Store({ color: 'purple' });
@@ -76,7 +76,7 @@ store.update({ score: 200 });
 console.log(store.read()); // { name: "Amy", score: 200 }
 ```
 
-If the argument is a function, it is called with the current store data. The store is update with the return value of the function.
+If the argument is a function, it is called with the current store data. The store is updated with the return value of the function.
 
 ```js
 const store = new Store({ name: 'Amy', score: 100 });
@@ -90,7 +90,7 @@ console.log(store.read()); // { name: "Amy", score: 200 }
 
 ### store.subscribe(callback)
 
-Subscribes to the data store. The callback function `fn` is immediately called with the current data. When the store is updated, `fn` is called with the current store data.
+Subscribes to the data store. The function `callback` is immediately called with the current data. When the store is updated, `callback` is called with the current store data.
 
 Returns a subscription object that can be used to cancel the subscription.
 
