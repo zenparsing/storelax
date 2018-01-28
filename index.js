@@ -72,9 +72,13 @@ function Store(data) {
     unobserved(self) && self.observedCallback();
     addObserver(self, observer);
     self._needsFlush = true;
-    Observable.of(null).subscribe(function() {
-      if (self._needsFlush && !observer.closed) {
-        sendTo(observer, self._state);
+    Promise.resolve().then(function() {
+      try {
+        if (self._needsFlush && !observer.closed) {
+          sendTo(observer, self._state);
+        }
+      } catch (err) {
+        setTimeout(function() { throw err; });
       }
     });
     return function() {

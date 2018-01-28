@@ -7,7 +7,8 @@ module.exports = {
   },
 
   "globals": {
-    "Set": true
+    "Set": true,
+    "Promise": true
   },
 
   "rules": {
