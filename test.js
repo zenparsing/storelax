@@ -21,14 +21,6 @@ async function main() {
     sub.unsubscribe();
   }
 
-  { // Symbol.observable
-    let result = undefined;
-    let sub = Observable.from(store).subscribe(x => result = x);
-    await null;
-    assert.deepEqual(result, { a: 1, b: 2 });
-    sub.unsubscribe();
-  }
-
   { // Multiple subscriptions
     let store = new Store({ a: 1, b: 2 });
     let results = [];

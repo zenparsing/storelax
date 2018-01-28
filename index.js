@@ -125,12 +125,8 @@ Store.prototype.update = function(data) {
   }
 };
 
-Store.prototype.subscribe = function(fn) {
-  return this.observable.subscribe(fn);
-};
-
-Store.prototype[Observable.extensions.observableSymbol] = function() {
-  return this.observable;
+Store.prototype.subscribe = function(next, error, complete) {
+  return this.observable.subscribe(next, error, complete);
 };
 
 module.exports = Store;
