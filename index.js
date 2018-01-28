@@ -3,6 +3,7 @@
 var Observable = require('zen-observable');
 
 function sendNext(self) {
+  self._needsFlush = false;
   var value = self._state;
   if (self._observer) {
     sendTo(self._observer, value);
@@ -57,6 +58,7 @@ function Store(data) {
   this._state = Object.create(null);
   this._observer = null;
   this._observers = null;
+  this._needsFlush = false;
 
   if (data) {
     for (var key in data) {
@@ -69,7 +71,12 @@ function Store(data) {
   this.observable = new Observable(function(observer) {
     unobserved(self) && self.observedCallback();
     addObserver(self, observer);
-    sendTo(observer, self._state);
+    self._needsFlush = true;
+    Observable.of(null).subscribe(function() {
+      if (self._needsFlush && !observer.closed) {
+        sendTo(observer, self._state);
+      }
+    });
     return function() {
       deleteObserver(self, observer);
       unobserved(self) && self.unobservedCallback();
