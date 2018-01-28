@@ -7,7 +7,7 @@ import Store from 'storelax';
 
 const store = new Store({ animal: 'zebra' });
 
-// Subscribers are sent the current state immediately
+// Subscribers are sent the current data
 store.subscribe(state => {
   console.log(`Username: ${state.animal}`);
 });
@@ -90,7 +90,7 @@ console.log(store.read()); // { name: "Amy", score: 200 }
 
 ### store.subscribe(callback)
 
-Subscribes to the data store. The function `callback` is immediately called with the current data. When the store is updated, `callback` is called with the current store data.
+Subscribes to the data store. The function `callback` is called with the current data. When the store is updated, `callback` is called with the current store data.
 
 Returns a subscription object that can be used to cancel the subscription.
 
