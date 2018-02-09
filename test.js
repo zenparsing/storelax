@@ -43,13 +43,12 @@ async function main() {
 
   { // Recursive next not allowed
     let store = new Store();
-    let error;
-    store.observable.subscribe(
-      () => store.update({ a: 1 }),
-      err => error = err
-    );
-    await null;
-    assert.ok(error);
+    try {
+      await store.observable.forEach(() => store.update({ a: 1 }));
+      assert.ok(false);
+    } catch (err) {
+      assert.ok(true);
+    }
   }
 
   { // observedCallback
