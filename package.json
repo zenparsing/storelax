@@ -16,7 +16,7 @@
     "test": "eslint index.js && node ./test.js"
   },
   "dependencies": {
-    "zen-observable": "^0.8.0"
+    "zen-observable": "^0.8.2"
   },
   "devDependencies": {
     "eslint": "^4.13.1"
