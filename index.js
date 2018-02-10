@@ -6,9 +6,19 @@ function sendNext(self) {
   self._needsFlush = false;
   var value = self._state;
   if (self._observer) {
-    self._observer.next(value);
+    sendTo(self._observer, value);
   } else if (self._observers) {
-    self._observers.forEach(function(to) { to.next(value); });
+    self._observers.forEach(function(to) { sendTo(to, value); });
+  }
+}
+
+function sendTo(observer, value) {
+  if (observer._nexting) {
+    observer.error(new Error('Subscriber is already running'));
+  } else {
+    observer._nexting = true;
+    observer.next(value);
+    observer._nexting = false;
   }
 }
 
@@ -65,7 +75,7 @@ function Store(data) {
     Promise.resolve().then(function() {
       try {
         if (self._needsFlush && !observer.closed) {
-          observer.next(self._state);
+          sendTo(observer, self._state);
         }
       } catch (err) {
         setTimeout(function() { throw err; });
