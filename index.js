@@ -13,13 +13,7 @@ function sendNext(self) {
 }
 
 function sendTo(observer, value) {
-  if (observer._nexting) {
-    observer.error(new Error('Subscriber is already running'));
-  } else {
-    observer._nexting = true;
-    observer.next(value);
-    observer._nexting = false;
-  }
+  observer.next(value);
 }
 
 function unobserved(self) {

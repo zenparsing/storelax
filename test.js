@@ -41,15 +41,20 @@ async function main() {
     sub2.unsubscribe();
   }
 
-  { // Recursive next not allowed
+  { // Recursive next schedules an update
     let store = new Store();
-    let error;
+    let calls = 0;
     store.observable.subscribe(
-      () => store.update({ a: 1 }),
-      err => error = err
+      () => {
+        calls++;
+        store.update({ a: 1 });
+      }
     );
     await null;
-    assert.ok(error);
+    assert.equal(store.read().a, 1);
+    assert.equal(calls, 1);
+    await null;
+    assert.equal(calls, 2);
   }
 
   { // observedCallback
