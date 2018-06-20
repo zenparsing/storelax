@@ -1,7 +1,7 @@
 {
   "name": "storelax",
-  "version": "0.2.9",
-  "description": "An easy observable object store",
+  "version": "0.3.0",
+  "description": "An easy and async-friendly object store",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -13,12 +13,12 @@
   ],
   "homepage": "https://github.com/zenparsing/storelax",
   "scripts": {
-    "test": "eslint index.js && node ./test.js"
+    "test": "eslint src/** && node -r esm test/default.js"
   },
   "dependencies": {
-    "zen-observable": "^0.8.6"
+    "esm": "^3.0.51"
   },
   "devDependencies": {
-    "eslint": "^4.13.1"
+    "eslint": "^4.19.1"
   }
 }

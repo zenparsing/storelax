@@ -2,13 +2,18 @@ module.exports = {
   "extends": ["eslint:recommended"],
 
   "env": {
-    "es6": false,
+    "es6": true,
     "node": true
   },
 
   "globals": {
     "Set": true,
     "Promise": true
+  },
+
+  "parserOptions": {
+    "ecmaVersion": 2018,
+    "sourceType": "module"
   },
 
   "rules": {

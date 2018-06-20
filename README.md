@@ -1,6 +1,6 @@
 # storelax
 
-An easy observable store.
+An easy, async-friendly object store.
 
 ```js
 import Store from 'storelax';
@@ -8,7 +8,7 @@ import Store from 'storelax';
 const store = new Store({ animal: 'zebra' });
 
 // Subscribers are sent the current data
-store.subscribe(state => {
+store.listen(state => {
   console.log(`Username: ${state.animal}`);
 });
 
@@ -36,18 +36,6 @@ const storeA = new Store();
 const storeB = new Store({ name: 'Hamilton' });
 ```
 
-### store.observable
-
-An Observable object representing the stream of store updates.
-
-```js
-const store = new Store({ shape: 'heart' });
-
-store.observable
-  .map(data => `draw me a ${ data.shape }`)
-  .subscribe(message => console.log(message));
-```
-
 ### store.read([mapFn])
 
 Returns the current store data. If `mapFn` is provided, it is called with the current store data and its return value is returned from this method.
@@ -66,7 +54,7 @@ console.log(
 
 ### store.update(data)
 
-Updates the store with the specified properties. All store observers are notified when an update occurs.
+Updates the store with the specified properties. All listeners are asynchronously notified when an update occurs.
 
 ```js
 const store = new Store({ name: 'Amy', score: 100 });
@@ -88,25 +76,25 @@ store.update(data => {
 console.log(store.read()); // { name: "Amy", score: 200 }
 ```
 
-### store.subscribe(callback)
+### store.listen(callback)
 
-Subscribes to the data store. The function `callback` is called with the current data. When the store is updated, `callback` is called with the current store data.
+Adds a listener to the data store. The function `callback` is called with the current data. When the store is updated, `callback` is called with the current store data.
 
-Returns a subscription object that can be used to cancel the subscription.
+Returns a function which may be used to cancel the listener.
 
 ```js
 const store = new Store({ name: 'Mr. X' });
 
 // "Mr. X" is immediately logged
-const subscription = store.subscribe(data => {
+const cancel = store.subscribe(data => {
   console.log(data.name);
 });
 
 // "Mr. Y" is logged on update
 store.update({ name: "Mr. Y" });
 
-// Cancel the current subscription
-subscription.unsubscribe();
+// Stop listening
+cancel();
 ```
 
 ### store.observedCallback()

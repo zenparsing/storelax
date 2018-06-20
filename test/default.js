@@ -1,8 +1,9 @@
-'use strict';
+import { Store } from '../src/Store';
+import * as assert from 'assert';
 
-const Store = require('./');
-const Observable = require('zen-observable');
-const assert = require('assert');
+function afterMicrotasks() {
+  return new Promise(resolve => setTimeout(resolve));
+}
 
 class MockObserver {
   next(x) { this.nextValue = x; }
@@ -13,47 +14,46 @@ class MockObserver {
 async function main() {
   let store = new Store({ a: 1, b: 2 });
 
-  { // Subscribe method
+  { // Listen method
     let result = undefined;
-    let sub = store.subscribe(x => result = x);
-    await null;
+    let cancel = store.listen(x => result = x);
+    await afterMicrotasks();
     assert.deepEqual(result, { a: 1, b: 2 });
-    sub.unsubscribe();
+    cancel();
   }
 
-  { // Multiple subscriptions
+  { // Multiple cancelscriptions
     let store = new Store({ a: 1, b: 2 });
     let results = [];
-    let sub1 = store.subscribe(x => results.push(x));
-    let sub2 = store.subscribe(x => results.push(x));
-    await null;
+    let cancel1 = store.listen(x => results.push(x));
+    let cancel2 = store.listen(x => results.push(x));
+    await afterMicrotasks();
     assert.deepEqual(results, [
       { a: 1, b: 2 },
       { a: 1, b: 2 }
     ]);
     results = [];
     store.update({ a: 2 });
+    await afterMicrotasks();
     assert.deepEqual(results, [
       { a: 2, b: 2 },
       { a: 2, b: 2 }
     ]);
-    sub1.unsubscribe();
-    sub2.unsubscribe();
+    cancel1();
+    cancel2();
   }
 
-  { // Recursive next schedules an update
+  { // Recursive update schedules a notification
     let store = new Store();
     let calls = 0;
-    store.observable.subscribe(
+    store.listen(
       () => {
         calls++;
         store.update({ a: 1 });
       }
     );
-    await null;
+    await afterMicrotasks();
     assert.equal(store.read().a, 1);
-    assert.equal(calls, 1);
-    await null;
     assert.equal(calls, 2);
   }
 
@@ -61,39 +61,38 @@ async function main() {
     let store = new Store({ a: 1 });
     let calls = 0;
     store.observedCallback = function() { calls++; };
-    let sub1 = store.subscribe(() => {});
+    let cancel1 = store.listen(() => {});
     assert.equal(calls, 1);
-    let sub2 = store.subscribe(() => {});
+    let cancel2 = store.listen(() => {});
     assert.equal(calls, 1);
-    sub1.unsubscribe();
-    sub2.unsubscribe();
-    sub2 = store.subscribe(() => {});
+    cancel1();
+    cancel2();
+    cancel2 = store.listen(() => {});
     assert.equal(calls, 2);
-    sub2.unsubscribe();
+    cancel2();
   }
 
   { // unobservedCallback
     let store = new Store({ a: 1 });
     let calls = 0;
     store.unobservedCallback = function() { calls++; };
-    let sub1 = store.subscribe(() => {});
-    sub1.unsubscribe();
+    let cancel1 = store.listen(() => {});
+    cancel1();
     assert.equal(calls, 1);
-    sub1 = store.subscribe(() => {});
-    let sub2 = store.subscribe(() => {});
-    sub1.unsubscribe();
+    cancel1 = store.listen(() => {});
+    let cancel2 = store.listen(() => {});
+    cancel1();
     assert.equal(calls, 1);
-    sub2.unsubscribe();
+    cancel2();
     assert.equal(calls, 2);
   }
 
-  let result, sub;
+  let result, cancel;
 
-  // Observable
-  sub = store.observable.subscribe(x => result = x);
-  await null;
+  cancel = store.listen(x => result = x);
+  await afterMicrotasks();
 
-  // Sends data on subscription
+  // Sends data on cancelscription
   assert.deepEqual(result, { a: 1, b: 2 });
 
   // Read
@@ -104,30 +103,36 @@ async function main() {
 
   // Update
   store.update({ a: 3, c: 4 });
+  await afterMicrotasks();
   assert.deepEqual(result, { a: 3, b: 2, c: 4 });
 
   // Update with function
   store.update(data => ({ a: data.a + 1 }));
+  await afterMicrotasks();
   assert.deepEqual(result, { a: 4, b: 2, c: 4 });
 
   // Update with null
   result = undefined;
   store.update(null);
+  await afterMicrotasks();
   assert.equal(result, undefined);
 
   // Update with undefined
   result = undefined;
   store.update(undefined);
+  await afterMicrotasks();
   assert.equal(result, undefined);
 
   // Update with state
   result = undefined;
   store.update(store.read());
+  await afterMicrotasks();
   assert.equal(result, undefined);
 
   // Update with no changes
   result = undefined;
   store.update({ a: 4 });
+  await afterMicrotasks();
   assert.equal(result, undefined);
 
   // Update with identical object
@@ -137,6 +142,7 @@ async function main() {
     data.obj.prop = 1;
     return { obj: data.obj };
   });
+  await afterMicrotasks();
   assert.deepEqual(result, { a: 4, b: 2, c: 4, obj: { prop: 1 } });
 
 }
