@@ -1,6 +1,6 @@
 {
   "name": "storelax",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "An easy and async-friendly object store",
   "license": "MIT",
   "repository": {
@@ -11,6 +11,7 @@
     "store",
     "observable"
   ],
+  "module": "default.js",
   "homepage": "https://github.com/zenparsing/storelax",
   "scripts": {
     "test": "eslint src/** && node -r esm test/default.js"
