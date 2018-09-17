@@ -22,7 +22,7 @@ async function main() {
     cancel();
   }
 
-  { // Multiple cancelscriptions
+  { // Multiple subscriptions
     let store = new Store({ a: 1, b: 2 });
     let results = [];
     let cancel1 = store.listen(x => results.push(x));
@@ -92,7 +92,7 @@ async function main() {
   cancel = store.listen(x => result = x);
   await afterMicrotasks();
 
-  // Sends data on cancelscription
+  // Sends data on subscription
   assert.deepEqual(result, { a: 1, b: 2 });
 
   // Read

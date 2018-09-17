@@ -3,6 +3,8 @@
   "version": "0.3.1",
   "description": "An easy and async-friendly object store",
   "license": "MIT",
+  "main": "dist/Store.js",
+  "module": "src/Store.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/zenparsing/storelax.git"
@@ -11,15 +13,15 @@
     "store",
     "observable"
   ],
-  "module": "default.js",
   "homepage": "https://github.com/zenparsing/storelax",
   "scripts": {
-    "test": "eslint src/** && node -r esm test/default.js"
+    "test": "eslint src/** && node -r annotated test",
+    "build": "annotated src -o dist -m",
+    "prepublishOnly": "npm test && npm run build"
   },
-  "dependencies": {
-    "esm": "^3.0.51"
-  },
+  "dependencies": {},
   "devDependencies": {
+    "annotated": "^0.3.4",
     "eslint": "^4.19.1"
   }
 }
