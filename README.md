@@ -3,16 +3,16 @@
 An easy, async-friendly object store.
 
 ```js
-import Store from 'storelax';
+import { Store } from 'storelax';
 
 const store = new Store({ animal: 'zebra' });
 
-// Subscribers are sent the current data
+// Listeners are sent the current data
 store.listen(state => {
   console.log(`Username: ${state.animal}`);
 });
 
-// Updates are sent to subscribers
+// Updates are sent to listeners
 store.update({ animal: 'hippopotamus' });
 ```
 
@@ -26,7 +26,7 @@ npm install storelax
 
 ### new Store([data])
 
-Creates a new store. If `data` is provided, the store will be initialized using its properties.
+Creates a new store. If `data` is not provided, the initial store value will be `null`.
 
 ```js
 // Creating an empty store
@@ -36,44 +36,42 @@ const storeA = new Store();
 const storeB = new Store({ name: 'Hamilton' });
 ```
 
-### store.read([mapFn])
+### get store.state
 
-Returns the current store data. If `mapFn` is provided, it is called with the current store data and its return value is returned from this method.
+Returns the current store data.
 
 ```js
 const store = new Store({ color: 'purple' });
 
 console.log(
-  store.read().color // "purple"
-);
-
-console.log(
-  store.read(data => data.color.toUpperCase()) // "PURPLE"
+  store.state.color // "purple"
 );
 ```
 
 ### store.update(data)
 
-Updates the store with the specified properties. All listeners are asynchronously notified when an update occurs.
+Updates the store with the specified data and notifies all listeners. If `data` is `undefined`, then the state value is not modified.
 
 ```js
 const store = new Store({ name: 'Amy', score: 100 });
 
-store.update({ score: 200 });
+store.update({ ...store.state, score: 200 });
 
-console.log(store.read()); // { name: "Amy", score: 200 }
+console.log(store.state); // { name: "Amy", score: 200 }
 ```
 
-If the argument is a function, it is called with the current store data. The store is updated with the return value of the function.
+### store.update(mapFn)
+
+Calls the specified mapping function and updates the store with the returned value and notifies all listeners. If the mapping function returns `undefined`, the state value is not modified.
 
 ```js
 const store = new Store({ name: 'Amy', score: 100 });
 
 store.update(data => {
-  return { score: data.score + 100 };
+  return { ...data, score: data.score + 100 };
 });
 
-console.log(store.read()); // { name: "Amy", score: 200 }
+console.log(store.state); // { name: "Amy", score: 200 }
 ```
 
 ### store.listen(callback)
@@ -86,7 +84,7 @@ Returns a function which may be used to cancel the listener.
 const store = new Store({ name: 'Mr. X' });
 
 // "Mr. X" is immediately logged
-const cancel = store.subscribe(data => {
+const cancel = store.listen(data => {
   console.log(data.name);
 });
 
@@ -97,18 +95,19 @@ store.update({ name: "Mr. Y" });
 cancel();
 ```
 
-### store.observedCallback()
+### store.wakeCallback()
 
-Called when the first observer is attached to the store. Subclasses can override this function to allocate resources when the store is observed.
+Called when the first observer is attached to the store. Subclasses can override this function to allocate resources when the store is given a first listener.
 
-### store.unobservedCallback()
+### store.sleepCallback()
 
-Called when the last observer has been removed from the store. Subclasses can override this function to finalize resources when the store is no longer observed.
+Called when the last observer has been removed from the store. Subclasses can override this function to finalize resources when the store has no listeners.
 
 ```js
 class CounterStore extends Store {
   constructor() {
     super({ count: 0 });
+    this.interval = 0;
   }
 
   increment() {
@@ -116,14 +115,15 @@ class CounterStore extends Store {
     this.update({ count: count + 1 });
   }
 
-  observedCallback() {
+  wakeCallback() {
     this.interval = setInterval(() => {
       this.increment();
     }, 1000);
   }
 
-  unobservedCallback() {
+  sleepCallback() {
     clearInterval(this.interval);
+    this.interval = 0;
   }
 }
 ```
