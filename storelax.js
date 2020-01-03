@@ -5,14 +5,14 @@ const { EventStream } = require('geneviv');
 
 class Store {
 
-  constructor(state) {
-    if (state === undefined) {
-      state = null;
+  constructor(value) {
+    if (value === undefined) {
+      value = null;
     }
 
     this._listener = null;
     this._listeners = null;
-    this._state = state;
+    this._value = value;
     this._notifying = false;
     this._notifyQueued = false;
 
@@ -55,8 +55,12 @@ class Store {
     });
   }
 
-  get state() {
-    return this._state;
+  get value() {
+    return this._value;
+  }
+
+  get stream() {
+    return this._stream;
   }
 
   listen(listener) {
@@ -79,13 +83,13 @@ class Store {
 
   sleepCallback() {}
 
-  update(state) {
-    if (typeof state === 'function') {
-      state = state(this._state);
+  update(value) {
+    if (typeof value === 'function') {
+      value = value(this._value);
     }
 
-    if (state !== undefined) {
-      this._state = state;
+    if (value !== undefined) {
+      this._value = value;
     }
 
     if (this._notifying) {
@@ -105,7 +109,7 @@ class Store {
   _notify(listener) {
     try {
       this._notifying = true;
-      listener.next(this._state);
+      listener.next(this._value);
     } catch (err) {
       setTimeout(() => { throw err; }, 0);
     } finally {

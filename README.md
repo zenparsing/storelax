@@ -8,8 +8,8 @@ import { Store } from 'storelax';
 const store = new Store({ animal: 'zebra' });
 
 // Listeners are sent the current data
-store.listen(state => {
-  console.log(`Username: ${state.animal}`);
+store.listen(value => {
+  console.log(`Username: ${value.animal}`);
 });
 
 // Updates are sent to listeners
@@ -24,9 +24,9 @@ npm install storelax
 
 ## API
 
-### new Store([data])
+### new Store(value?)
 
-Creates a new store. If `data` is not provided, the initial store value will be `null`.
+Creates a new store. If `value` is `undefined` or is not provided, the initial store value will be `null`.
 
 ```js
 // Creating an empty store
@@ -36,47 +36,59 @@ const storeA = new Store();
 const storeB = new Store({ name: 'Hamilton' });
 ```
 
-### get store.state
+### get store.value
 
-Returns the current store data.
+Returns the current store value.
 
 ```js
 const store = new Store({ color: 'purple' });
 
 console.log(
-  store.state.color // "purple"
+  store.value.color // "purple"
 );
 ```
 
-### store.update(data)
+### get store.stream
 
-Updates the store with the specified data and notifies all listeners. If `data` is `undefined`, then the state value is not modified.
+Return a event stream for updates to the store.
+
+```js
+const store = new Store(1);
+
+store.stream.map(x => x * x).listen(x => {
+  console.log(x); // Log the squares of the store value
+});
+```
+
+### store.update(value?)
+
+Updates the store with the specified value and notifies all listeners. If `value` is `undefined`, then the store value is not modified.
 
 ```js
 const store = new Store({ name: 'Amy', score: 100 });
 
-store.update({ ...store.state, score: 200 });
+store.update({ ...store.value, score: 200 });
 
-console.log(store.state); // { name: "Amy", score: 200 }
+console.log(store.value); // { name: "Amy", score: 200 }
 ```
 
 ### store.update(mapFn)
 
-Calls the specified mapping function and updates the store with the returned value and notifies all listeners. If the mapping function returns `undefined`, the state value is not modified.
+Calls the specified mapping function and updates the store with the value returned from the function and notifies all listeners. If the mapping function returns `undefined`, the state value is not modified.
 
 ```js
 const store = new Store({ name: 'Amy', score: 100 });
 
-store.update(data => {
-  return { ...data, score: data.score + 100 };
+store.update(value => {
+  return { ...value, score: value.score + 100 };
 });
 
-console.log(store.state); // { name: "Amy", score: 200 }
+console.log(store.value); // { name: "Amy", score: 200 }
 ```
 
 ### store.listen(callback)
 
-Adds a listener to the data store. The function `callback` is called with the current data. When the store is updated, `callback` is called with the current store data.
+Adds a listener to the data store. The function `callback` is asynchronously called with the current data. When the store is updated, `callback` is called with the current store data.
 
 Returns a function which may be used to cancel the listener.
 

@@ -27,7 +27,7 @@ async function main() {
       { a: 1, b: 2 },
     ]);
     results = [];
-    store.update(state => { state.a = 2; });
+    store.update(value => { value.a = 2; });
     await afterMicrotasks();
     assert.deepEqual(results, [
       { a: 2, b: 2 },
@@ -46,7 +46,7 @@ async function main() {
       }
     });
     await afterMicrotasks();
-    assert.equal(store.state.a, 1);
+    assert.equal(store.value.a, 1);
     assert.equal(calls, 2);
   }
 
@@ -89,10 +89,10 @@ async function main() {
   assert.deepEqual(result, { a: 1, b: 2 });
 
   // Read
-  assert.deepEqual(store.state, { a: 1, b: 2 });
+  assert.deepEqual(store.value, { a: 1, b: 2 });
 
   // Update
-  store.update({ ...store.state, a: 3, c: 4 });
+  store.update({ ...store.value, a: 3, c: 4 });
   await afterMicrotasks();
   assert.deepEqual(result, { a: 3, b: 2, c: 4 });
 
