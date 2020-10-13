@@ -91,6 +91,10 @@ export class Store {
     return this[Value];
   }
 
+  get stream() {
+    return this[Stream];
+  }
+
   listen(listener) {
     return this[Stream].listen(listener);
   }

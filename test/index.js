@@ -21,6 +21,16 @@ describe('Store', () => {
     });
   });
 
+  describe('stream', () => {
+    it('should return the value stream', async() => {
+      let store = new Store({ a: 1, b: 2 });
+      let result;
+      store.stream.map(x => x.a).listen(x => result = x);
+      await afterMicrotasks();
+      assert.strictEqual(result, 1);
+    });
+  });
+
   describe('listen', () => {
     it('should send the current value in a microtask', async() => {
       let store = new Store({ a: 1, b: 2 });
