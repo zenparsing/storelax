@@ -1,6 +1,6 @@
 {
   "name": "storelax",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "An easy and async-friendly object store",
   "license": "MIT",
   "repository": {
@@ -11,16 +11,17 @@
     "store",
     "observable"
   ],
+  "type": "module",
   "main": "./storelax.js",
   "homepage": "https://github.com/zenparsing/storelax",
   "scripts": {
     "test": "eslint *.js test/*.js && node test/"
   },
   "dependencies": {
-    "async-iteration-buffer": "^0.2.0",
-    "geneviv": "0.0.3"
+    "geneviv": "0.0.7"
   },
   "devDependencies": {
-    "eslint": "^6.8.0"
+    "eslint": "^7.11.0",
+    "moon-unit": "^0.3.1"
   }
 }

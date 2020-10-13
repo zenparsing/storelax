@@ -1,82 +1,102 @@
-'use strict';
+import { EventStream } from 'geneviv';
 
-const { AsyncIterationBuffer } = require('async-iteration-buffer');
-const { EventStream } = require('geneviv');
+const Notifying = Symbol();
+const Value = Symbol();
+const Listener = Symbol();
+const Listeners = Symbol();
+const NotifyQueued = Symbol();
+const NewListeners = Symbol();
+const Stream = Symbol();
 
-class Store {
+function enqueue(fn) {
+  EventStream.of(undefined).listen(fn);
+}
 
-  constructor(value) {
-    if (value === undefined) {
-      value = null;
+function notify(listener, value) {
+  try {
+    listener.next(value);
+  } catch (err) {
+    enqueue(() => { throw err; });
+  }
+}
+
+export class Store {
+
+  constructor(value = null) {
+    if (typeof value !== 'object') {
+      throw new Error('Initial store value must be an object');
     }
 
-    this._listener = null;
-    this._listeners = null;
-    this._value = value;
-    this._notifying = false;
-    this._notifyQueued = false;
+    this[Value] = value || {};
+    this[Listener] = null;
+    this[Listeners] = null;
+    this[Notifying] = false;
+    this[NotifyQueued] = false;
+    this[NewListeners] = null;
 
-    this._stream = new EventStream(listener => {
-      if (!this._listener && !this._listeners) {
+    this[Stream] = new EventStream(listener => {
+      if (!this[Listener] && !this[Listeners]) {
         this.wakeCallback();
       }
 
-      if (this._listeners) {
-        this._listeners.add(listener);
-      } else if (!this._listener) {
-        this._listener = listener;
+      if (this[Listeners]) {
+        this[Listeners].add(listener);
+      } else if (!this[Listener]) {
+        this[Listener] = listener;
       } else {
-        this._listeners = new Set();
-        this._listeners.add(this._listener);
-        this._listeners.add(listener);
-        this._listener = null;
+        this[Listeners] = new Set();
+        this[Listeners].add(this[Listener]);
+        this[Listeners].add(listener);
+        this[Listener] = null;
       }
 
-      EventStream.of(null).listen(() => {
-        if (!listener.done) {
-          this._notify(listener);
-        }
-      });
+      if (this[NewListeners]) {
+        this[NewListeners].push(listener);
+      } else {
+        this[NewListeners] = [listener];
+        enqueue(() => {
+          let list = this[NewListeners];
+          if (list) {
+            this[NewListeners] = null;
+            for (let listener of list) {
+              if (!listener.done) {
+                this[Notifying] = true;
+                notify(listener, this[Value]);
+                this[Notifying] = false;
+              }
+            }
+          }
+        });
+      }
 
       return () => {
-        if (this._listeners) {
-          this._listeners.delete(listener);
-          if (this._listeners.size === 0) {
-            this._listeners = null;
+        if (this[Listeners]) {
+          this[Listeners].delete(listener);
+          if (this[Listeners].size === 0) {
+            this[Listeners] = null;
           }
         } else {
-          // assert(this._listener === listener)
-          this._listener = null;
+          // assert(this[Listener] === listener)
+          this[Listener] = null;
         }
-        if (!this._listener && !this._listeners) {
+        if (!this[Listener] && !this[Listeners]) {
           this.sleepCallback();
         }
       };
     });
+
   }
 
   get value() {
-    return this._value;
-  }
-
-  get stream() {
-    return this._stream;
+    return this[Value];
   }
 
   listen(listener) {
-    return this._stream.listen(listener);
+    return this[Stream].listen(listener);
   }
 
   [Symbol.asyncIterator]() {
-    let cancel;
-
-    let buffer = new AsyncIterationBuffer({
-      cancel() { cancel(); },
-    });
-
-    cancel = this.listen(buffer);
-
-    return buffer[Symbol.asyncIterator]();
+    return this[Stream][Symbol.asyncIterator];
   }
 
   wakeCallback() {}
@@ -85,48 +105,35 @@ class Store {
 
   update(value) {
     if (typeof value === 'function') {
-      value = value(this._value);
+      value = value(this[Value]);
     }
 
-    if (value !== undefined) {
-      this._value = value;
-    }
+    Object.assign(this[Value], value);
 
-    if (this._notifying) {
-      this._queueNotification();
+    this[NewListeners] = null;
+
+    if (this[Notifying]) {
+      if (!this[NotifyQueued]) {
+        enqueue(() => {
+          this[NotifyQueued] = false;
+          this.update();
+        });
+        this[NotifyQueued] = true;
+      }
       return;
     }
 
-    if (this._listener) {
-      this._notify(this._listener);
-    } else if (this._listeners) {
-      for (let listener of this._listeners) {
-        this._notify(listener);
+    this[Notifying] = true;
+
+    if (this[Listener]) {
+      notify(this[Listener], this[Value]);
+    } else if (this[Listeners]) {
+      for (let listener of this[Listeners]) {
+        notify(listener, this[Value]);
       }
     }
-  }
 
-  _notify(listener) {
-    try {
-      this._notifying = true;
-      listener.next(this._value);
-    } catch (err) {
-      setTimeout(() => { throw err; }, 0);
-    } finally {
-      this._notifying = false;
-    }
-  }
-
-  _queueNotification() {
-    if (!this._notifyQueued) {
-      EventStream.of(null).listen(() => {
-        this._notifyQueued = false;
-        this.update();
-      });
-      this._notifyQueued = true;
-    }
+    this[Notifying] = false;
   }
 
 }
-
-module.exports = { Store };

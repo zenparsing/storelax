@@ -1,106 +1,131 @@
-const { Store } = require('../');
-const assert = require('assert');
+import * as assert from 'assert';
+import { describe, it } from 'moon-unit';
+import { Store } from '../storelax.js';
 
 function afterMicrotasks() {
   return new Promise(resolve => setTimeout(resolve));
 }
 
-async function main() {
-  let store = new Store({ a: 1, b: 2 });
+describe('Store', () => {
 
-  { // Listen method
-    let result = undefined;
-    let cancel = store.listen(x => result = x);
-    await afterMicrotasks();
-    assert.deepEqual(result, { a: 1, b: 2 });
-    cancel();
-  }
-
-  { // Multiple subscriptions
-    let store = new Store({ a: 1, b: 2 });
-    let results = [];
-    let cancel1 = store.listen(x => results.push(x));
-    let cancel2 = store.listen(x => results.push(x));
-    await afterMicrotasks();
-    assert.deepEqual(results, [
-      { a: 1, b: 2 },
-      { a: 1, b: 2 },
-    ]);
-    results = [];
-    store.update(value => { value.a = 2; });
-    await afterMicrotasks();
-    assert.deepEqual(results, [
-      { a: 2, b: 2 },
-      { a: 2, b: 2 },
-    ]);
-    cancel1();
-    cancel2();
-  }
-
-  { // Recursive update schedules a notification
-    let store = new Store();
-    let calls = 0;
-    store.listen(() => {
-      if (calls++ === 0) {
-        store.update({ a: 1 });
-      }
+  describe('properties', () => {
+    it('should have no keys', () => {
+      assert.deepStrictEqual(Object.keys(new Store()), []);
     });
-    await afterMicrotasks();
-    assert.equal(store.value.a, 1);
-    assert.equal(calls, 2);
-  }
+  });
 
-  { // wakeCallback
-    let store = new Store({ a: 1 });
-    let calls = 0;
-    store.wakeCallback = function() { calls++; };
-    let cancel1 = store.listen(() => {});
-    assert.equal(calls, 1);
-    let cancel2 = store.listen(() => {});
-    assert.equal(calls, 1);
-    cancel1();
-    cancel2();
-    cancel2 = store.listen(() => {});
-    assert.equal(calls, 2);
-    cancel2();
-  }
+  describe('value', () => {
+    it('should return the current value', async() => {
+      let store = new Store({ a: 1, b: 2 });
+      assert.deepStrictEqual(store.value, { a: 1, b: 2 });
+    });
+  });
 
-  { // sleepCallback
-    let store = new Store({ a: 1 });
-    let calls = 0;
-    store.sleepCallback = function() { calls++; };
-    let cancel1 = store.listen(() => {});
-    cancel1();
-    assert.equal(calls, 1);
-    cancel1 = store.listen(() => {});
-    let cancel2 = store.listen(() => {});
-    cancel1();
-    assert.equal(calls, 1);
-    cancel2();
-    assert.equal(calls, 2);
-  }
+  describe('listen', () => {
+    it('should send the current value in a microtask', async() => {
+      let store = new Store({ a: 1, b: 2 });
+      let result = undefined;
 
-  let result;
+      store.listen(x => result = x);
 
-  store.listen(x => result = x);
-  await afterMicrotasks();
+      assert.strictEqual(result, undefined);
+      await afterMicrotasks();
+      assert.deepStrictEqual(result, { a: 1, b: 2 });
+    });
 
-  // Sends data on listen
-  assert.deepEqual(result, { a: 1, b: 2 });
+    it('should not resent the current value if update is called', async() => {
+      let store = new Store({ a: 1, b: 2 });
+      let calls = 0;
 
-  // Read
-  assert.deepEqual(store.value, { a: 1, b: 2 });
+      store.listen(() => calls += 1);
+      assert.strictEqual(calls, 0);
+      store.update({ a: 2, b: 2 });
+      assert.strictEqual(calls, 1);
+      await afterMicrotasks();
+      assert.strictEqual(calls, 1);
+    });
 
-  // Update
-  store.update({ ...store.value, a: 3, c: 4 });
-  await afterMicrotasks();
-  assert.deepEqual(result, { a: 3, b: 2, c: 4 });
+    it('should handle multiple subscriptions', async() => {
+      let store = new Store({ a: 1, b: 2 });
+      let results = [];
+      let cancel1 = store.listen(x => results.push(x));
+      let cancel2 = store.listen(x => results.push(x));
+      await afterMicrotasks();
+      assert.deepStrictEqual(results, [
+        { a: 1, b: 2 },
+        { a: 1, b: 2 },
+      ]);
+      results = [];
+      store.update(value => { value.a = 2; });
+      await afterMicrotasks();
+      assert.deepStrictEqual(results, [
+        { a: 2, b: 2 },
+        { a: 2, b: 2 },
+      ]);
+      cancel1();
+      cancel2();
+    });
+  });
 
-  // Update with function
-  store.update(data => ({ ...data, a: data.a + 1 }));
-  await afterMicrotasks();
-  assert.deepEqual(result, { a: 4, b: 2, c: 4 });
+  describe('update', () => {
+    it('should schedule update when called recursively', async() => {
+      let store = new Store();
+      let calls = 0;
+      store.listen(() => {
+        if (calls++ === 0) {
+          store.update({ a: 1 });
+        }
+      });
+      await afterMicrotasks();
+      assert.strictEqual(store.value.a, 1);
+      assert.strictEqual(calls, 2);
+    });
 
-}
+    it('should accept a function parameter', () => {
+      let store = new Store({ a: 3, b: 2, c: 4 });
+      store.update(data => ({ ...data, a: data.a + 1 }));
+      assert.deepStrictEqual(store.value, { a: 4, b: 2, c: 4 });
+    });
 
-main().catch(err => setTimeout(() => { throw err; }));
+    it('should accept a partial', () => {
+      let store = new Store({ a: 1, b: 2 });
+      store.update({ b: 5 });
+      assert.deepStrictEqual(store.value, { a: 1, b: 5 });
+    });
+  });
+
+  describe('wakeCallback', () => {
+    it('should be called when the first listener is added', async() => {
+      let store = new Store({ a: 1 });
+      let calls = 0;
+      store.wakeCallback = function() { calls++; };
+      let cancel1 = store.listen(() => {});
+      assert.strictEqual(calls, 1);
+      let cancel2 = store.listen(() => {});
+      assert.strictEqual(calls, 1);
+      cancel1();
+      cancel2();
+      cancel2 = store.listen(() => {});
+      assert.strictEqual(calls, 2);
+      cancel2();
+    });
+  });
+
+  describe('sleepCallback', () => {
+    it('should be called when the last listener is removed', () => {
+      let store = new Store({ a: 1 });
+      let calls = 0;
+      store.sleepCallback = function() { calls++; };
+      let cancel1 = store.listen(() => {});
+      cancel1();
+      assert.strictEqual(calls, 1);
+      cancel1 = store.listen(() => {});
+      let cancel2 = store.listen(() => {});
+      cancel1();
+      assert.strictEqual(calls, 1);
+      cancel2();
+      assert.strictEqual(calls, 2);
+    });
+  });
+
+});
