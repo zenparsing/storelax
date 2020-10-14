@@ -8,7 +8,33 @@ function afterMicrotasks() {
 
 describe('Store', () => {
 
-  describe('properties', () => {
+  describe('constructor', () => {
+    it('should accept a source object', () => {
+      assert.deepStrictEqual(new Store({ a: 1 }).value, { a: 1 });
+    });
+
+    it('should create a new object', () => {
+      let init = {};
+      assert.notStrictEqual(new Store(init).value, init);
+    });
+
+    it('should throw if provided a non-object', () => {
+      assert.throws(() => {
+        new Store(() => {});
+      });
+      assert.throws(() => {
+        new Store('');
+      });
+      assert.throws(() => {
+        new Store(0);
+      });
+      assert.throws(() => {
+        new Store(false);
+      });
+    });
+  });
+
+  describe('object shape', () => {
     it('should have no keys', () => {
       assert.deepStrictEqual(Object.keys(new Store()), []);
     });
@@ -66,7 +92,7 @@ describe('Store', () => {
         { a: 1, b: 2 },
       ]);
       results = [];
-      store.update(value => { value.a = 2; });
+      store.update({ a: 2 });
       await afterMicrotasks();
       assert.deepStrictEqual(results, [
         { a: 2, b: 2 },
@@ -91,10 +117,20 @@ describe('Store', () => {
       assert.strictEqual(calls, 2);
     });
 
-    it('should accept a function parameter', () => {
-      let store = new Store({ a: 3, b: 2, c: 4 });
-      store.update(data => ({ ...data, a: data.a + 1 }));
-      assert.deepStrictEqual(store.value, { a: 4, b: 2, c: 4 });
+    it('should throw if supplied a non-object', () => {
+      let store = new Store();
+      assert.throws(() => {
+        store.update(() => {});
+      });
+      assert.throws(() => {
+        store.update('');
+      });
+      assert.throws(() => {
+        store.update(0);
+      });
+      assert.throws(() => {
+        store.update(false);
+      });
     });
 
     it('should accept a partial', () => {

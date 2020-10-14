@@ -24,10 +24,10 @@ export class Store {
 
   constructor(value = null) {
     if (typeof value !== 'object') {
-      throw new Error('Initial store value must be an object');
+      throw new Error('Invalid initialization source');
     }
 
-    this[Value] = value || {};
+    this[Value] = Object.assign({}, value);
     this[Listener] = null;
     this[Listeners] = null;
     this[Notifying] = false;
@@ -107,9 +107,9 @@ export class Store {
 
   sleepCallback() {}
 
-  update(value) {
-    if (typeof value === 'function') {
-      value = value(this[Value]);
+  update(value = null) {
+    if (typeof value !== 'object') {
+      throw new Error('Invalid update source');
     }
 
     Object.assign(this[Value], value);
