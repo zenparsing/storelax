@@ -1,7 +1,7 @@
 import { EventStream } from 'geneviv';
 
 const Notifying = Symbol();
-const Value = Symbol();
+const State = Symbol();
 const Listener = Symbol();
 const Listeners = Symbol();
 const NotifyQueued = Symbol();
@@ -22,12 +22,12 @@ function notify(listener, value) {
 
 export class Store {
 
-  constructor(value = null) {
-    if (typeof value !== 'object') {
+  constructor(source = null) {
+    if (typeof source !== 'object') {
       throw new Error('Invalid initialization source');
     }
 
-    this[Value] = Object.assign({}, value);
+    this[State] = Object.assign({}, source);
     this[Listener] = null;
     this[Listeners] = null;
     this[Notifying] = false;
@@ -61,7 +61,7 @@ export class Store {
             for (let listener of list) {
               if (!listener.done) {
                 this[Notifying] = true;
-                notify(listener, this[Value]);
+                notify(listener, this[State]);
                 this[Notifying] = false;
               }
             }
@@ -87,8 +87,8 @@ export class Store {
 
   }
 
-  get value() {
-    return this[Value];
+  get state() {
+    return this[State];
   }
 
   get stream() {
@@ -107,12 +107,12 @@ export class Store {
 
   sleepCallback() {}
 
-  update(value = null) {
-    if (typeof value !== 'object') {
+  update(source = null) {
+    if (typeof source !== 'object') {
       throw new Error('Invalid update source');
     }
 
-    Object.assign(this[Value], value);
+    Object.assign(this[State], source);
 
     this[NewListeners] = null;
 
@@ -130,10 +130,10 @@ export class Store {
     this[Notifying] = true;
 
     if (this[Listener]) {
-      notify(this[Listener], this[Value]);
+      notify(this[Listener], this[State]);
     } else if (this[Listeners]) {
       for (let listener of this[Listeners]) {
-        notify(listener, this[Value]);
+        notify(listener, this[State]);
       }
     }
 

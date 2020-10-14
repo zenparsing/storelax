@@ -10,12 +10,12 @@ describe('Store', () => {
 
   describe('constructor', () => {
     it('should accept a source object', () => {
-      assert.deepStrictEqual(new Store({ a: 1 }).value, { a: 1 });
+      assert.deepStrictEqual(new Store({ a: 1 }).state, { a: 1 });
     });
 
     it('should create a new object', () => {
       let init = {};
-      assert.notStrictEqual(new Store(init).value, init);
+      assert.notStrictEqual(new Store(init).state, init);
     });
 
     it('should throw if provided a non-object', () => {
@@ -40,10 +40,10 @@ describe('Store', () => {
     });
   });
 
-  describe('value', () => {
-    it('should return the current value', async() => {
+  describe('state', () => {
+    it('should return the current state', async() => {
       let store = new Store({ a: 1, b: 2 });
-      assert.deepStrictEqual(store.value, { a: 1, b: 2 });
+      assert.deepStrictEqual(store.state, { a: 1, b: 2 });
     });
   });
 
@@ -113,7 +113,7 @@ describe('Store', () => {
         }
       });
       await afterMicrotasks();
-      assert.strictEqual(store.value.a, 1);
+      assert.strictEqual(store.state.a, 1);
       assert.strictEqual(calls, 2);
     });
 
@@ -136,7 +136,7 @@ describe('Store', () => {
     it('should accept a partial', () => {
       let store = new Store({ a: 1, b: 2 });
       store.update({ b: 5 });
-      assert.deepStrictEqual(store.value, { a: 1, b: 5 });
+      assert.deepStrictEqual(store.state, { a: 1, b: 5 });
     });
   });
 

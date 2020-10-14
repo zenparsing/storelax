@@ -8,8 +8,8 @@ import { Store } from 'storelax';
 const store = new Store({ animal: 'zebra' });
 
 // Listeners are sent the current data
-store.listen(value => {
-  console.log(`Username: ${value.animal}`);
+store.listen(state => {
+  console.log(`Username: ${state.animal}`);
 });
 
 // Updates are sent to listeners
@@ -24,9 +24,9 @@ npm install storelax
 
 ## API
 
-### new Store(value?)
+### new Store(source?)
 
-Creates a new store. If `value` is `undefined` or is not provided, the initial store value will be `null`.
+Creates a new store. If `source` is not `undefined` or `null`, the keys of the `source` are used to initialized the store.
 
 ```js
 // Creating an empty store
@@ -36,9 +36,9 @@ const storeA = new Store();
 const storeB = new Store({ name: 'Hamilton' });
 ```
 
-### get store.value
+### get store.state
 
-Returns the current store value.
+Returns the current state.
 
 ```js
 const store = new Store({ color: 'purple' });
@@ -55,56 +55,44 @@ Return a event stream for updates to the store.
 ```js
 const store = new Store(1);
 
-store.stream.map(x => x * x).listen(x => {
-  console.log(x); // Log the squares of the store value
+store.stream.map(x => 2 * x).listen(x => {
+  console.log(x); // Log the doubles of the store value
 });
 ```
 
-### store.update(value?)
+### store.update(source?)
 
-Updates the store with the specified value and notifies all listeners. If `value` is `undefined`, then the store value is not modified.
+Updates the store with `source` and notifies all listeners. If `source` is not `undefined` or `null`, the keys of the `source` are used to update the store.
 
 ```js
 const store = new Store({ name: 'Amy', score: 100 });
 
-store.update({ ...store.value, score: 200 });
+store.update({ score: 200 });
 
-console.log(store.value); // { name: "Amy", score: 200 }
-```
-
-### store.update(mapFn)
-
-Calls the specified mapping function and updates the store with the value returned from the function and notifies all listeners. If the mapping function returns `undefined`, the state value is not modified.
-
-```js
-const store = new Store({ name: 'Amy', score: 100 });
-
-store.update(value => {
-  return { ...value, score: value.score + 100 };
-});
-
-console.log(store.value); // { name: "Amy", score: 200 }
+console.log(store.state); // { name: "Amy", score: 200 }
 ```
 
 ### store.listen(callback)
 
-Adds a listener to the data store. The function `callback` is asynchronously called with the current data. When the store is updated, `callback` is called with the current store data.
+Adds a listener to the data store. The function `callback` is asynchronously called with the current state. Each time the store is updated, `callback` is called with the current state.
 
 Returns a function which may be used to cancel the listener.
 
 ```js
 const store = new Store({ name: 'Mr. X' });
 
-// "Mr. X" is immediately logged
+// "Mr. X" is logged asynchronously
 const cancel = store.listen(data => {
   console.log(data.name);
 });
 
-// "Mr. Y" is logged on update
-store.update({ name: "Mr. Y" });
+queueMicrotask() => {
+  // "Mr. Y" is logged immediately on update
+  store.update({ name: "Mr. Y" });
 
-// Stop listening
-cancel();
+  // Stop listening
+  cancel();
+});
 ```
 
 ### store.wakeCallback()
