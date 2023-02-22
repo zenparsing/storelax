@@ -1,6 +1,6 @@
 {
   "name": "storelax",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "An easy and async-friendly object store",
   "license": "MIT",
   "repository": {
@@ -18,10 +18,10 @@
     "test": "eslint *.js test/*.js && node test/"
   },
   "dependencies": {
-    "geneviv": "0.0.7"
+    "geneviv": "^0.1.0"
   },
   "devDependencies": {
-    "eslint": "^7.11.0",
+    "eslint": "^8.34.0",
     "moon-unit": "^0.3.1"
   }
 }
