@@ -1,6 +1,6 @@
 {
   "name": "storelax",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "An easy and async-friendly object store",
   "license": "MIT",
   "repository": {
@@ -15,13 +15,17 @@
   "main": "./storelax.js",
   "homepage": "https://github.com/zenparsing/storelax",
   "scripts": {
-    "test": "eslint *.js test/*.js && node test/"
+    "test": "eslint *.js test/*.js && node test/",
+    "bundle": "rollup -c rollup.config.js",
+    "prepublishOnly": "npm test && npm run bundle"
   },
   "dependencies": {
     "geneviv": "^0.1.0"
   },
   "devDependencies": {
+    "@rollup/plugin-node-resolve": "^15.0.1",
     "eslint": "^8.34.0",
-    "moon-unit": "^0.3.1"
+    "moon-unit": "^0.3.1",
+    "rollup": "^3.17.2"
   }
 }
