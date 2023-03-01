@@ -57,6 +57,16 @@ describe('Store', () => {
     });
   });
 
+  describe('map', () => {
+    it('should return a mapped stream', async() => {
+      let store = new Store({ a: 1, b: 2 });
+      let result;
+      store.map(x => x.a).listen(x => result = x);
+      await afterMicrotasks();
+      assert.strictEqual(result, 1);
+    });
+  });
+
   describe('listen', () => {
     it('should send the current value in a microtask', async() => {
       let store = new Store({ a: 1, b: 2 });

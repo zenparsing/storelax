@@ -95,6 +95,10 @@ export class Store {
     return this[Stream];
   }
 
+  map(fn) {
+    return this[Stream].map(fn);
+  }
+
   listen(listener) {
     return this[Stream].listen(listener);
   }

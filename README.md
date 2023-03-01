@@ -36,21 +36,21 @@ const storeA = new Store();
 const storeB = new Store({ name: 'Hamilton' });
 ```
 
-### get store.state
+### store.state
 
-Returns the current state.
+Gets the current state of the store.
 
 ```js
 const store = new Store({ color: 'purple' });
 
 console.log(
-  store.value.color // "purple"
+  store.state.color // "purple"
 );
 ```
 
-### get store.stream
+### store.stream
 
-Return a event stream for updates to the store.
+Gets a event stream for updates to the store.
 
 ```js
 const store = new Store(1);
@@ -60,9 +60,21 @@ store.stream.map(x => 2 * x).listen(x => {
 });
 ```
 
+### store.map(fn)
+
+Returns a stream for updates to the store, mapped using `fn`.
+
+```js
+const store = new Store(1);
+
+store.map(x => 2 * x).listen(x => {
+  console.log(x); // Log the doubles of the store value
+});
+```
+
 ### store.update(source?)
 
-Updates the store with `source` and notifies all listeners. If `source` is not `undefined` or `null`, the keys of the `source` are used to update the store.
+Updates the store with `source` and notifies all listeners. If `source` is not `undefined` or `null`, the keys of `source` are used to update the store.
 
 ```js
 const store = new Store({ name: 'Amy', score: 100 });
